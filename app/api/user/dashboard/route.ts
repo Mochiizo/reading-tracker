@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         FROM user_books ub
         JOIN books b ON ub.book_id = b.id
         JOIN categories c ON b.category_id = c.id
-        WHERE ub.user_id = $1
+        WHERE ub.user_id = $1 AND ub.status != 'completed'
         ORDER BY ub.completed_at DESC, ub.started_at DESC`,
         [userId]
       );
