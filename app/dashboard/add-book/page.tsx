@@ -25,19 +25,17 @@ export default function AddBookPage() {
   const { user, token } = useAuth();
 
   useEffect(() => {
-    if (!user || !token) {
-      router.push('/login');
-      return;
-    }
-
     const fetchCategories = async () => {
       try {
         const response = await fetch('/api/categories');
         const data = await response.json();
-        if (response.ok) {
-          setCategories(data);
+        if (!response.ok) {
+          if (response.status === 401) {
+            router.push('/login');
+          }
+          throw new Error(data.message || 'Erreur lors du chargement des catégories.');
         } else {
-          setError(data.message || 'Erreur lors du chargement des catégories.');
+          setCategories(data);
         }
       } catch (err) {
         console.error('Erreur inattendue lors de la récupération des catégories:', err);
@@ -46,14 +44,14 @@ export default function AddBookPage() {
     };
 
     fetchCategories();
-  }, [user, token, router]);
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!user || !token) {
+    if (!user) {
       setError('Vous devez être connecté pour ajouter un livre.');
       router.push('/login');
       return;
@@ -69,7 +67,6 @@ export default function AddBookPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ title, author, total_pages: totalPages, category_id: categoryId, user_id: user.id }),
       });
@@ -78,6 +75,9 @@ export default function AddBookPage() {
 
       if (!response.ok) {
         setError(data.message || 'Erreur lors de l\'ajout du livre.');
+        if (response.status === 401) {
+          router.push('/login');
+        }
       } else {
         setSuccess(data.message || 'Livre ajouté avec succès !');
         setTitle('');

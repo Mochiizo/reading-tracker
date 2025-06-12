@@ -30,23 +30,23 @@ export default function CompletedBooksPage() {
   const { user, token } = useAuth();
 
   useEffect(() => {
-    if (!user || !token) {
-      router.push('/login');
-      return;
-    }
-
     const fetchCompletedBooks = async () => {
       try {
         const response = await fetch('/api/user/books/completed', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          // L'en-tête d'autorisation n'est plus nécessaire, le cookie HTTP-only est envoyé automatiquement
+          // headers: {
+          //   'Authorization': `Bearer ${token}`,
+          // },
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.message || 'Erreur lors du chargement des livres terminés.');
+          // Rediriger si non autorisé
+          if (response.status === 401) {
+            router.push('/login');
+          }
+          throw new Error(data.message || 'Erreur lors du chargement des livres terminés.');
         } else {
           setBooks(data.books);
         }
@@ -59,7 +59,7 @@ export default function CompletedBooksPage() {
     };
 
     fetchCompletedBooks();
-  }, [user, token, router]);
+  }, [user, router]);
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;

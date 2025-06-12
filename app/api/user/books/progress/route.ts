@@ -3,7 +3,7 @@ import pool from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 
 export async function PUT(request: NextRequest) {
-  const { userId, error } = verifyToken(request);
+  const { userId, error } = await verifyToken(request);
 
   if (error || !userId) {
     return NextResponse.json({ message: error || 'Non autorisé' }, { status: 401 });
