@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/app/providers/auth-provider';
+import { useRouter } from 'next/navigation';
 
 interface Badge {
   id: number;
@@ -28,6 +29,7 @@ const BadgesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { token } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -41,18 +43,12 @@ const BadgesPage = () => {
         setAllBadges(allBadgesData);
 
         // Fetch user badges (requires authentication)
-        if (!token) {
-          setError('Authentification requise pour charger les badges de l\'utilisateur.');
-          setLoading(false);
-          return;
-        }
-
-        const userBadgesRes = await fetch('/api/user/badges', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const userBadgesRes = await fetch('/api/user/badges');
         if (!userBadgesRes.ok) {
+          // Rediriger si non autorisé
+          if (userBadgesRes.status === 401) {
+            router.push('/login');
+          }
           throw new Error(`Erreur lors de la récupération des badges de l\'utilisateur: ${userBadgesRes.statusText}`);
         }
         const userBadgesData: UserBadge[] = await userBadgesRes.json();
@@ -67,7 +63,7 @@ const BadgesPage = () => {
     };
 
     fetchBadges();
-  }, [token]);
+  }, [token, router]); // Ajout de router aux dépendances
 
   const userUnlockedBadgeIds = new Set(userBadges.map(badge => badge.id));
 

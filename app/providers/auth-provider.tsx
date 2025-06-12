@@ -15,6 +15,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  loginTrigger: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,47 +24,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loginTrigger, setLoginTrigger] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
+    const fetchSession = async () => {
       try {
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+
+        if (data.isAuthenticated && data.user) {
+          setUser(data.user);
+          setLoginTrigger(Date.now());
+        } else {
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem('user');
+        }
       } catch (e) {
-        console.error('Erreur lors de la récupération des données utilisateur depuis le localStorage:', e);
-        // Si les données sont corrompues, on les supprime
-        localStorage.removeItem('token');
+        console.error('Erreur lors de la récupération de la session:', e);
+        setUser(null);
+        setToken(null);
         localStorage.removeItem('user');
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    fetchSession();
   }, []);
 
   const login = (newToken: string, newUser: User) => {
-    localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
-    setToken(newToken);
     setUser(newUser);
+    setLoginTrigger(Date.now());
+    console.log("AuthProvider - User after login:", newUser);
+    console.log("AuthProvider - Login Trigger after login:", Date.now());
+    router.refresh();
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        console.error("Erreur lors de la déconnexion de l'utilisateur:", await res.json());
+      }
+    } catch (error) {
+      console.error("Erreur inattendue lors de la déconnexion:", error);
+    } finally {
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+      setLoginTrigger(Date.now());
+      console.log("AuthProvider - User after logout:", null);
+      console.log("AuthProvider - Login Trigger after logout:", Date.now());
+      router.push('/login');
+    }
   };
 
   if (loading) {
-    return <div>Chargement de la session...</div>; // Ou un spinner de chargement
+    return <div>Chargement de la session...</div>;
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loginTrigger }}>
       {children}
     </AuthContext.Provider>
   );

@@ -22,18 +22,8 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const fetchDashboardData = async () => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
     try {
       const response = await fetch('/api/user/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
       const data = await response.json();
@@ -67,18 +57,11 @@ export default function DashboardPage() {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
     try {
       const response = await fetch('/api/user/books/progress', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_book_id: selectedBookToUpdate.user_book_id,
@@ -90,6 +73,9 @@ export default function DashboardPage() {
 
       if (!response.ok) {
         setError(data.message || 'Erreur lors de la mise à jour de la progression.');
+        if (response.status === 401) {
+          router.push('/login');
+        }
       } else {
         setIsUpdateProgressDialogOpen(false);
         setSelectedBookToUpdate(null);
@@ -108,18 +94,11 @@ export default function DashboardPage() {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
     try {
       const response = await fetch('/api/user/books/complete', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ user_book_id: userBookId }),
       });
@@ -128,6 +107,9 @@ export default function DashboardPage() {
 
       if (!response.ok) {
         setError(data.message || 'Erreur lors du marquage du livre comme terminé.');
+        if (response.status === 401) {
+          router.push('/login');
+        }
       } else {
         fetchDashboardData(); // Recharger les données du tableau de bord
         if (data.newlyUnlockedBadges && data.newlyUnlockedBadges.length > 0) {

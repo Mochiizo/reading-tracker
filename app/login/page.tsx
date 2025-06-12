@@ -30,10 +30,9 @@ export default function LoginPage() {
       if (!response.ok) {
         setError(data.message || 'Erreur lors de la connexion.');
       } else {
-        // Stocker le token (par exemple dans le localStorage ou un cookie)
-        localStorage.setItem('token', data.token);
+        // Le token est maintenant géré par les cookies HTTP-only côté serveur.
         localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/dashboard'); // Rediriger vers le tableau de bord après connexion
+        router.push('/loading'); // Rediriger vers la page de chargement après connexion
       }
     } catch (err) {
       console.error('Erreur inattendue:', err);
