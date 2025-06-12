@@ -144,9 +144,4 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ## 👥 Auteurs
 
-- [Votre Nom] - Développeur Principal
-
-## 🙏 Remerciements
-
-- Adatech School pour le concept du projet
-- Tous les contributeurs qui ont participé au développement
+- [Hautbois Mathis] - Développeur Principal
