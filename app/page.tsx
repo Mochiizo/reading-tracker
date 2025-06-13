@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+/**
+ * Page d'accueil de l'application Reading Tracker
+ * Présente les principales fonctionnalités et invite les utilisateurs à s'inscrire ou se connecter
+ */
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
-      {/* Hero Section */}
+      {/* Section Hero - En-tête principal avec titre et boutons d'action */}
       <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col items-center text-center space-y-8">
           <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
@@ -14,6 +18,7 @@ export default function Home() {
             Transformez votre passion pour la lecture en une aventure ludique. Suivez vos progrès, gagnez des points et débloquez des badges !
           </p>
           
+          {/* Boutons d'action pour l'inscription et la connexion */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <Link 
               href="/register"
@@ -31,9 +36,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Features Section */}
+      {/* Section Fonctionnalités - Présentation des 3 principales fonctionnalités */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-3 gap-8">
+          {/* Carte Fonctionnalité 1: Suivi de Lecture */}
           <div className="p-6 rounded-lg border bg-card text-card-foreground">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -44,6 +50,7 @@ export default function Home() {
             <p className="text-muted-foreground">Suivez votre progression, marquez vos livres comme lus et gardez une trace de vos lectures.</p>
           </div>
 
+          {/* Carte Fonctionnalité 2: Système de Points */}
           <div className="p-6 rounded-lg border bg-card text-card-foreground">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,6 +61,7 @@ export default function Home() {
             <p className="text-muted-foreground">Gagnez des points pour chaque livre terminé et progressez à travers différents niveaux.</p>
           </div>
 
+          {/* Carte Fonctionnalité 3: Badges & Récompenses */}
           <div className="p-6 rounded-lg border bg-card text-card-foreground">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +74,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Stats Section */}
+      {/* Section Statistiques - Affiche les chiffres clés de l'application */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
@@ -88,7 +96,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Pied de page avec copyright */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© 2024 Reading Tracker. Tous droits réservés.</p>

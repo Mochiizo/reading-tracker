@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/app/providers/auth-provider';
 
+/**
+ * Interface définissant la structure d'un livre complété
+ */
 interface CompletedBook {
   user_book_id: string;
   book_id: string;
@@ -22,27 +25,33 @@ interface CompletedBook {
   completed_at: string;
 }
 
+/**
+ * Page des livres complétés
+ * Affiche la liste des livres que l'utilisateur a terminé de lire
+ */
 export default function CompletedBooksPage() {
+  // États pour gérer les livres, le chargement et les erreurs
   const [books, setBooks] = useState<CompletedBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { user, token } = useAuth();
 
+  /**
+   * Effet pour charger les livres complétés au montage du composant
+   */
   useEffect(() => {
     const fetchCompletedBooks = async () => {
       try {
+        // Récupération des livres complétés depuis l'API
         const response = await fetch('/api/user/books/completed', {
           // L'en-tête d'autorisation n'est plus nécessaire, le cookie HTTP-only est envoyé automatiquement
-          // headers: {
-          //   'Authorization': `Bearer ${token}`,
-          // },
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          // Rediriger si non autorisé
+          // Redirection si non autorisé
           if (response.status === 401) {
             router.push('/login');
           }
@@ -61,30 +70,36 @@ export default function CompletedBooksPage() {
     fetchCompletedBooks();
   }, [user, router]);
 
+  // Affichage pendant le chargement
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
 
+  // Affichage en cas d'erreur
   if (error) {
     return <div className="flex min-h-screen items-center justify-center text-red-500">{error}</div>;
   }
 
   return (
     <div className="min-h-screen p-8 bg-gray-100 dark:bg-gray-950">
+      {/* En-tête de la page */}
       <h1 className="text-3xl font-bold mb-8 text-center">Mes Livres Lus</h1>
 
+      {/* Bouton d'ajout de livre */}
       <div className="flex justify-end mb-4">
         <Link href="/dashboard/add-book">
           <Button>Ajouter un nouveau livre</Button>
         </Link>
       </div>
 
+      {/* Carte contenant le tableau des livres complétés */}
       <Card>
         <CardHeader>
           <CardTitle>Liste des Livres Terminés</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
+            {/* En-têtes du tableau */}
             <TableHeader>
               <TableRow>
                 <TableHead>Titre</TableHead>
@@ -96,6 +111,7 @@ export default function CompletedBooksPage() {
                 <TableHead className="text-right">Terminé le</TableHead>
               </TableRow>
             </TableHeader>
+            {/* Corps du tableau */}
             <TableBody>
               {books.length > 0 ? (
                 books.map((book) => (

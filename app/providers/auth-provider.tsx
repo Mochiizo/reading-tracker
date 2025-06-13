@@ -3,6 +3,9 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Interface définissant la structure d'un utilisateur
+ */
 interface User {
   id: string;
   name: string;
@@ -10,6 +13,9 @@ interface User {
   avatar?: string;
 }
 
+/**
+ * Interface définissant le type du contexte d'authentification
+ */
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -18,18 +24,28 @@ interface AuthContextType {
   loginTrigger: number;
 }
 
+// Création du contexte d'authentification
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Fournisseur d'authentification
+ * Gère l'état de l'authentification et fournit les méthodes de connexion/déconnexion
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // États pour gérer l'utilisateur, le token et le chargement
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginTrigger, setLoginTrigger] = useState(0);
   const router = useRouter();
 
+  /**
+   * Effet pour vérifier la session au montage du composant
+   */
   useEffect(() => {
     const fetchSession = async () => {
       try {
+        // Récupération de la session depuis l'API
         const res = await fetch('/api/auth/session');
         const data = await res.json();
 
@@ -54,6 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchSession();
   }, []);
 
+  /**
+   * Fonction de connexion
+   * Met à jour l'état de l'utilisateur et déclenche un rafraîchissement
+   */
   const login = (newToken: string, newUser: User) => {
     localStorage.setItem('user', JSON.stringify(newUser));
     setUser(newUser);
@@ -63,8 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.refresh();
   };
 
+  /**
+   * Fonction de déconnexion
+   * Déconnecte l'utilisateur et redirige vers la page de connexion
+   */
   const logout = async () => {
     try {
+      // Appel à l'API de déconnexion
       const res = await fetch('/api/auth/logout', {
         method: 'POST',
       });
@@ -75,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Erreur inattendue lors de la déconnexion:", error);
     } finally {
+      // Nettoyage des données d'authentification
       localStorage.removeItem('user');
       setToken(null);
       setUser(null);
@@ -85,10 +111,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Affichage pendant le chargement de la session
   if (loading) {
     return <div>Chargement de la session...</div>;
   }
 
+  // Fourniture du contexte d'authentification
   return (
     <AuthContext.Provider value={{ user, token, login, logout, loginTrigger }}>
       {children}
@@ -96,6 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Hook personnalisé pour utiliser le contexte d'authentification
+ * @throws {Error} Si utilisé en dehors d'un AuthProvider
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

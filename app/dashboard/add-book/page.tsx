@@ -8,12 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/app/providers/auth-provider';
 
+/**
+ * Interface définissant la structure d'une catégorie
+ */
 interface Category {
   id: string;
   name: string;
 }
 
+/**
+ * Page d'ajout de livre
+ * Permet aux utilisateurs d'ajouter un nouveau livre à leur bibliothèque
+ */
 export default function AddBookPage() {
+  // États pour gérer les champs du formulaire et les retours utilisateur
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [totalPages, setTotalPages] = useState<number | ''>('');
@@ -24,12 +32,17 @@ export default function AddBookPage() {
   const router = useRouter();
   const { user, token } = useAuth();
 
+  /**
+   * Effet pour charger les catégories disponibles au montage du composant
+   */
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        // Récupération des catégories depuis l'API
         const response = await fetch('/api/categories');
         const data = await response.json();
         if (!response.ok) {
+          // Redirection si non autorisé
           if (response.status === 401) {
             router.push('/login');
           }
@@ -46,23 +59,30 @@ export default function AddBookPage() {
     fetchCategories();
   }, [user, router]);
 
+  /**
+   * Gestionnaire de soumission du formulaire
+   * Vérifie les données et envoie la requête d'ajout de livre
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
+    // Vérification de l'authentification
     if (!user) {
       setError('Vous devez être connecté pour ajouter un livre.');
       router.push('/login');
       return;
     }
 
+    // Validation des champs requis
     if (!title || !author || !totalPages || !categoryId) {
       setError('Tous les champs sont requis.');
       return;
     }
 
     try {
+      // Envoi de la requête d'ajout de livre
       const response = await fetch('/api/books', {
         method: 'POST',
         headers: {
@@ -79,12 +99,13 @@ export default function AddBookPage() {
           router.push('/login');
         }
       } else {
+        // Réinitialisation du formulaire et redirection en cas de succès
         setSuccess(data.message || 'Livre ajouté avec succès !');
         setTitle('');
         setAuthor('');
         setTotalPages('');
         setCategoryId('');
-        router.push('/dashboard'); // Rediriger vers le tableau de bord après l'ajout
+        router.push('/dashboard');
       }
     } catch (err) {
       console.error('Erreur inattendue:', err);
@@ -94,6 +115,7 @@ export default function AddBookPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-950">
+      {/* Carte contenant le formulaire d'ajout de livre */}
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Ajouter un Livre</CardTitle>
@@ -101,6 +123,7 @@ export default function AddBookPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Champ titre */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Titre</label>
               <Input
@@ -112,6 +135,7 @@ export default function AddBookPage() {
                 required
               />
             </div>
+            {/* Champ auteur */}
             <div>
               <label htmlFor="author" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Auteur</label>
               <Input
@@ -123,6 +147,7 @@ export default function AddBookPage() {
                 required
               />
             </div>
+            {/* Champ nombre de pages */}
             <div>
               <label htmlFor="totalPages" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Nombre de pages</label>
               <Input
@@ -134,6 +159,7 @@ export default function AddBookPage() {
                 required
               />
             </div>
+            {/* Sélection de la catégorie */}
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Catégorie</label>
               <Select onValueChange={setCategoryId} value={categoryId.toString()} required>
@@ -149,10 +175,12 @@ export default function AddBookPage() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Messages d'erreur et de succès */}
             {error && <p className="text-red-500 text-sm">{error}</p>}
             {success && <p className="text-green-500 text-sm">{success}</p>}
             <Button type="submit" className="w-full">Ajouter le livre</Button>
           </form>
+          {/* Lien de retour au tableau de bord */}
           <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
             <a href="/dashboard" className="font-medium text-blue-600 hover:underline">Retour au tableau de bord</a>
           </p>

@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+  // Vérification de l'authentification de l'utilisateur
   const { userId, error } = await verifyToken(request);
 
   if (error || !userId) {
@@ -10,9 +11,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Connexion à la base de données
     const client = await pool.connect();
     try {
-      // Récupérer les statistiques actuelles de l'utilisateur
+      // Récupération des statistiques de l'utilisateur (points, livres lus, niveau)
       const userStatsResult = await client.query(
         'SELECT total_points, books_read_count, current_level FROM users WHERE id = $1',
         [userId]
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Utilisateur non trouvé.' }, { status: 404 });
       }
 
-      // Récupérer tous les badges actifs et les badges déjà débloqués par l'utilisateur
+      // Récupération parallèle des badges actifs et des badges déjà débloqués par l'utilisateur
       const [allBadgesResult, userBadgesResult] = await Promise.all([
         client.query('SELECT id, name, slug, description, type, criteria FROM badges WHERE is_active = TRUE'),
         client.query('SELECT badge_id FROM user_badges WHERE user_id = $1', [userId])
@@ -32,17 +34,20 @@ export async function POST(request: NextRequest) {
       const allBadges = allBadgesResult.rows;
       const userUnlockedBadgeIds = new Set(userBadgesResult.rows.map(row => row.badge_id));
 
+      // Logs pour le débogage
       console.log('UserID pour vérification des badges:', userId);
       console.log('Tous les badges actifs:', allBadges);
       console.log('Badges débloqués par l\'utilisateur (IDs):', Array.from(userUnlockedBadgeIds));
 
       const newlyUnlockedBadges = [];
 
+      // Vérification de chaque badge pour l'utilisateur
       for (const badge of allBadges) {
+        // Vérifie si le badge n'est pas déjà débloqué
         if (!userUnlockedBadgeIds.has(badge.id)) {
-          // Logique de vérification pour chaque type de badge
           let unlocked = false;
 
+          // Vérification des conditions spécifiques pour chaque type de badge
           switch (badge.slug) {
             case 'premiere-lecture':
               unlocked = userStats.books_read_count >= 1;
@@ -54,6 +59,7 @@ export async function POST(request: NextRequest) {
               unlocked = userStats.books_read_count >= 20;
               break;
             case 'marathon-lecture':
+              // Vérifie si l'utilisateur a lu au moins un livre de plus de 300 pages
               const marathonBookCountResult = await client.query(
                 `SELECT COUNT(DISTINCT ub.book_id)
                  FROM user_books ub
@@ -65,6 +71,7 @@ export async function POST(request: NextRequest) {
               unlocked = marathonBookCountResult.rows[0].count > 0;
               break;
             case 'devoreur-paves':
+              // Vérifie si l'utilisateur a lu au moins un livre de plus de 500 pages
               const devoreurPavesCountResult = await client.query(
                 `SELECT COUNT(DISTINCT ub.book_id)
                  FROM user_books ub
@@ -78,11 +85,11 @@ export async function POST(request: NextRequest) {
             case 'niveau-expert':
               unlocked = userStats.current_level >= 5;
               break;
-            // Ajoutez d'autres cas pour d'autres types de badges
             default:
               break;
           }
 
+          // Si le badge est débloqué, on l'ajoute à la base de données et à la liste des nouveaux badges
           if (unlocked) {
             console.log(`Badge débloqué: ${badge.name} (ID: ${badge.id})`);
             await client.query(
@@ -97,12 +104,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Vérification des badges terminée.', newlyUnlockedBadges }, { status: 200 });
 
     } catch (dbError) {
+      // Gestion des erreurs de base de données
       console.error('Erreur de base de données lors de la vérification des badges:', dbError);
       return NextResponse.json({ message: 'Erreur de base de données lors de la vérification des badges' }, { status: 500 });
     } finally {
+      // Libération de la connexion à la base de données
       client.release();
     }
   } catch (err) {
+    // Gestion des erreurs générales
     console.error('Erreur inattendue dans l\'API de vérification des badges:', err);
     return NextResponse.json({ message: 'Erreur inattendue lors de la vérification des badges' }, { status: 500 });
   }

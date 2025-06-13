@@ -11,7 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
+/**
+ * Page du tableau de bord de l'application
+ * Affiche les statistiques de l'utilisateur, ses badges et la liste de ses livres
+ */
 export default function DashboardPage() {
+  // États pour gérer les données utilisateur et l'interface
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +26,9 @@ export default function DashboardPage() {
   const [newlyUnlockedBadges, setNewlyUnlockedBadges] = useState<string[]>([]);
   const router = useRouter();
 
+  /**
+   * Récupère les données du tableau de bord depuis l'API
+   */
   const fetchDashboardData = async () => {
     try {
       const response = await fetch('/api/user/dashboard', {
@@ -41,16 +49,24 @@ export default function DashboardPage() {
     }
   };
 
+  // Chargement initial des données
   useEffect(() => {
     fetchDashboardData();
   }, [router]);
 
+  /**
+   * Gère le clic sur le bouton de mise à jour de la progression
+   * @param {any} book - Le livre à mettre à jour
+   */
   const handleUpdateProgressClick = (book: any) => {
     setSelectedBookToUpdate(book);
     setPagesReadInput(book.pages_read);
     setIsUpdateProgressDialogOpen(true);
   };
 
+  /**
+   * Sauvegarde la progression mise à jour d'un livre
+   */
   const handleSaveProgress = async () => {
     if (!selectedBookToUpdate || pagesReadInput === '' || pagesReadInput < 0) {
       setError('Veuillez entrer un nombre de pages valide.');
@@ -88,6 +104,10 @@ export default function DashboardPage() {
     }
   };
 
+  /**
+   * Marque un livre comme terminé
+   * @param {string} userBookId - L'ID du livre utilisateur à marquer comme terminé
+   */
   const handleMarkAsComplete = async (userBookId: string) => {
     const confirmation = window.confirm("Êtes-vous sûr de vouloir marquer ce livre comme terminé ?");
     if (!confirmation) {
@@ -125,20 +145,24 @@ export default function DashboardPage() {
     }
   };
 
+  // Affichage pendant le chargement
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
 
+  // Affichage en cas d'erreur
   if (error) {
     return <div className="flex min-h-screen items-center justify-center text-red-500">{error}</div>;
   }
 
+  // Vérification de la présence des données utilisateur
   if (!user) {
-    return null; // ou un autre état de chargement/erreur
+    return null;
   }
 
   return (
     <div className="min-h-screen p-8 bg-gray-100 dark:bg-gray-950">
+      {/* En-tête avec nom d'utilisateur et bouton d'ajout de livre */}
       <h1 className="text-3xl font-bold mb-8 text-center">Bienvenue, {user.name || user.email}!</h1>
       
       <div className="flex justify-center mb-8">
@@ -147,7 +171,9 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* Cartes de statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Carte des points totaux */}
         <Card>
           <CardHeader>
             <CardTitle>Points Totaux</CardTitle>
@@ -157,17 +183,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Carte du niveau actuel */}
         <Card>
           <CardHeader>
             <CardTitle>Niveau Actuel</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">Niveau {user.current_level || 1}</p>
-            <Progress value={user.total_points % 100} className="mt-4" /> {/* Exemple de progression */}
+            <Progress value={user.total_points % 100} className="mt-4" />
             <p className="text-sm text-gray-500 mt-2">Progrès vers le prochain niveau</p>
           </CardContent>
         </Card>
 
+        {/* Carte des livres lus */}
         <Link href="/dashboard/completed-books" className="block">
           <Card className="h-full flex flex-col justify-between">
             <CardHeader>
@@ -183,6 +211,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* Section des badges obtenus */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Badges Obtenus</CardTitle>
@@ -202,6 +231,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
+      {/* Tableau des livres en cours */}
       <Card>
         <CardHeader>
           <Link href="/dashboard/completed-books">
@@ -254,7 +284,9 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500">Aucun livre ajouté pour l'instant.</TableCell>
+                  <TableCell colSpan={7} className="text-center text-gray-500">
+                    Aucun livre en cours de lecture.
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

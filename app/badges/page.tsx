@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from '@/app/providers/auth-provider';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Interface définissant la structure d'un badge
+ */
 interface Badge {
   id: number;
   name: string;
@@ -16,11 +19,20 @@ interface Badge {
   criteria: any; // Ajustez ce type si vous avez un schéma plus spécifique
 }
 
+/**
+ * Interface étendant Badge pour inclure la date d'obtention
+ */
 interface UserBadge extends Badge {
   earned_at: string;
 }
 
+/**
+ * Page des badges de l'application
+ * Affiche tous les badges disponibles et ceux débloqués par l'utilisateur
+ * Permet de filtrer et rechercher les badges
+ */
 const BadgesPage = () => {
+  // États pour gérer les badges, le chargement et les filtres
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,10 +43,14 @@ const BadgesPage = () => {
   const { token } = useAuth();
   const router = useRouter();
 
+  /**
+   * Effet pour charger les badges au montage du composant
+   * Récupère tous les badges et les badges de l'utilisateur
+   */
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        // Fetch all badges
+        // Récupération de tous les badges disponibles
         const allBadgesRes = await fetch('/api/badges');
         if (!allBadgesRes.ok) {
           throw new Error(`Erreur lors de la récupération de tous les badges: ${allBadgesRes.statusText}`);
@@ -42,10 +58,10 @@ const BadgesPage = () => {
         const allBadgesData: Badge[] = await allBadgesRes.json();
         setAllBadges(allBadgesData);
 
-        // Fetch user badges (requires authentication)
+        // Récupération des badges de l'utilisateur (nécessite une authentification)
         const userBadgesRes = await fetch('/api/user/badges');
         if (!userBadgesRes.ok) {
-          // Rediriger si non autorisé
+          // Redirection si non autorisé
           if (userBadgesRes.status === 401) {
             router.push('/login');
           }
@@ -63,10 +79,14 @@ const BadgesPage = () => {
     };
 
     fetchBadges();
-  }, [token, router]); // Ajout de router aux dépendances
+  }, [token, router]);
 
+  // Création d'un Set des IDs des badges débloqués pour une recherche rapide
   const userUnlockedBadgeIds = new Set(userBadges.map(badge => badge.id));
 
+  /**
+   * Filtre les badges selon les critères de recherche et le filtre sélectionné
+   */
   const filteredBadges = allBadges.filter(badge => {
     const isUnlocked = userUnlockedBadgeIds.has(badge.id);
     const matchesSearch = badge.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,10 +103,12 @@ const BadgesPage = () => {
     }
   });
 
+  // Affichage pendant le chargement
   if (loading) {
     return <div className="container mx-auto p-4 text-center">Chargement des badges...</div>;
   }
 
+  // Affichage en cas d'erreur
   if (error) {
     return <div className="container mx-auto p-4 text-center text-red-500">Erreur: {error}</div>;
   }
@@ -95,6 +117,7 @@ const BadgesPage = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Vos Badges</h1>
 
+      {/* Barre de recherche et filtres */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <Input
           placeholder="Rechercher un badge..."
@@ -124,6 +147,7 @@ const BadgesPage = () => {
         </div>
       </div>
 
+      {/* Grille des badges */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredBadges.length > 0 ? (
           filteredBadges.map((badge) => {
